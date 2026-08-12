@@ -1,0 +1,166 @@
+
+LEVELS = ["A1","A2","A2+","B1","B1+","B2","B2+","C1-C2"]
+
+LEVEL_LABELS = {
+    "A1":"Beginner",
+    "A2":"Elementary",
+    "A2+":"Pre-Intermediate",
+    "B1":"Intermediate",
+    "B1+":"Intermediate Plus",
+    "B2":"Upper-Intermediate",
+    "B2+":"Upper-Intermediate Plus",
+    "C1-C2":"Advanced"
+}
+
+CURRICULUM = {
+"A1":[
+["Hello","Jobs","Nationalities","English in action"],
+["Families","Everyday things","Numbers","English in action"],
+["My town","Is there wifi?","It's expensive!","English in action"],
+["You've got a friend","Have you got it?","Dos and don'ts","English in action"],
+["My week","A long journey","Food and drink","English in action"],
+["Good and bad habits","Jobs around the house","Skills","English in action"],
+["Questions","A good day","How was it?","English in action"],
+["When I was young","You had a bad day","Good places","English in action"],
+["Family photos","Hobbies","Study habits","English in action"],
+["Goals","Party time","My plans","English in action"],
+],
+"A2":[
+["People and places","All about me","For sale","English in action"],
+["Families","After the party","Special things","English in action"],
+["Free time","A night's work","Going out","English in action"],
+["A nice area","Homes","Be prepared","English in action"],
+["What does he look like?","How was it?","You can do it!","English in action"],
+["Events","A good weekend","A different world","English in action"],
+["Food","Shopping","Unusual cafes","English in action"],
+["A great time","Weather","Travel talk","English in action"],
+["Good advice","My goals","New experiences","English in action"],
+["Living together","Formal or casual?","A digital world","English in action"],
+],
+"A2+":[
+["Getting to know you","Successful people","A new lifestyle","English in action"],
+["One of those days","You're never too old","Unusual tastes","English in action"],
+["Urban escapes","A place to stay","Never ever","English in action"],
+["Special days","Planning events","Rules of the race","English in action"],
+["The right person","Appearances","Shopping tips","English in action"],
+["Happiness","A busy week","A quiet weekend","English in action"],
+["The building project","Where I grew up","A favourite room","English in action"],
+["Special photos","Getting around","Dream holidays","English in action"],
+["Good friends","What's on?","School days","English in action"],
+["Save or spend?","Everyday objects","Unusual hobbies","English in action"],
+],
+"B1":[
+["Profiles","Life maps","What next?","English in action"],
+["What happened?","Memories","Culture shock","English in action"],
+["Bucket lists","Catching up","My kind of town","English in action"],
+["The internet generation","Popular brands","Favourite films","English in action"],
+["How does it look?","Living space","Eating well","English in action"],
+["Life without...","A difficult choice","Take action!","English in action"],
+["New skills","Life events","Trip of a lifetime","English in action"],
+["Changing rules","Who says I can't?","Natural world","English in action"],
+["Shopping","What if...?","Is it art?","English in action"],
+["Education","Green cities","What's in a job?","English in action"],
+],
+"B1+":[
+["Eating out","A place to live","A late night","English in action"],
+["Getting better","First days","Changing world","English in action"],
+["Places to see","Big issues","Living abroad","English in action"],
+["A big mistake","Crime doesn't pay","It's not good enough!","English in action"],
+["A bright future","Living the dream","A good education","English in action"],
+["A great show","A five star review","Headline news","English in action"],
+["Health problems","Money talks","Kings of the road","English in action"],
+["Small changes","Relationships","Big moments","English in action"],
+["Quality of life","An ideal society","Great sporting moments","English in action"],
+["A huge influence","Interviews","Describing things","English in action"],
+],
+"B2":[
+["Talking to strangers","Life lessons","Personalities","English in action"],
+["What's the truth?","Running wild?","It's so annoying!","English in action"],
+["I remember...","Great rivals","Life's too short","English in action"],
+["Possessions","Job skills","Unwritten rules","English in action"],
+["Splashing out","Crime scene","Bubble trouble","English in action"],
+["Love it or loathe it?","We can work it out","Tricky conversations","English in action"],
+["Possible futures","Business plans","Cultural awareness","English in action"],
+["It's so predictable","On the run","Great art?","English in action"],
+["Mysteries","Strange theories","Celebrity","English in action"],
+["Will I be happy?","Believe it or not!","New solutions","English in action"],
+],
+"B2+":[
+["Give it a go","Kind acts","How annoying!","English in action"],
+["On the mend","A good cause","Regeneration","English in action"],
+["It'll brighten up","Law and order","Fair play","English in action"],
+["Time of your life","Fashion icon","Being me","English in action"],
+["On the move","In the wild","House or home?","English in action"],
+["A difficult business","On the map","Going out","English in action"],
+["Ups and downs","Is it news?","A show of hands","English in action"],
+["Jobs for life?","Sleep well","Food for thought","English in action"],
+["Feelings","Habitats","All the range","English in action"],
+["Eureka!","A great read","A good laugh","English in action"],
+],
+"C1-C2":[
+["Team building","Online/Offline","Kidfluencers","English in action"],
+["Changes","Work, work, work","Local issues","English in action"],
+["Ideas","Problems, problems","Fact or fiction?","English in action"],
+["High emotion","Volunteering","The mind's eye","English in action"],
+["Unsung heroes","The power of failure","The great clean-up","English in action"],
+["Dystopias","Consumer affairs","Signs of the times","English in action"],
+["Journeys","It's a scam!","Skills for life","English in action"],
+["We all do it","Pivotal moments","Urban survival","English in action"],
+["Oral storytelling","Gossip","Rewilding","English in action"],
+["The next big thing","It's your turn","Is this the future?","English in action"],
+]
+}
+
+A1 = {
+(1,"A"):("be: I and you","countries","short forms of be","Presentarte a otros estudiantes."),
+(1,"B"):("be: he/she/it","jobs","short forms of be","Preguntar y responder sobre profesiones."),
+(1,"C"):("be: you/we/they","nationalities","short forms of be","Hablar sobre diferentes nacionalidades."),
+(1,"D"):("ask for and give contact information","contact information","polite intonation","Pedir y dar información de contacto."),
+(2,"A"):("possessive 's; my/your/his/her","family","possessive forms","Hablar sobre tu familia."),
+(2,"B"):("this, that, these, those","everyday objects","this and these","Hablar sobre objetos cotidianos."),
+(2,"C"):("question words with be","numbers 1-100","questions with be","Preguntar datos sobre otras personas."),
+(2,"D"):("pay for things in a shop","shopping language","polite intonation","Pagar productos en una tienda."),
+(3,"A"):("there is / there are","places in town","short forms","Decir qué hay en una ciudad."),
+(3,"B"):("is there / are there","rooms and home objects","question intonation","Hablar de una vivienda."),
+(3,"C"):("position of adjectives","describing places","sentence stress","Describir un pueblo o ciudad."),
+(3,"D"):("ask for and give directions","directions","polite intonation","Pedir y dar direcciones."),
+(4,"A"):("have / has got","describing people","short forms","Describir personas."),
+(4,"B"):("have / has got: questions","everyday objects","strong and weak forms","Prepararte para un viaje."),
+(4,"C"):("imperatives","common verbs","sentence stress","Dar consejos."),
+(4,"D"):("tell the time","time expressions","time pronunciation","Decir la hora."),
+(5,"A"):("present simple: I/you/we/they","days and everyday activities","sentence stress","Describir parte de tu semana."),
+(5,"B"):("present simple questions","travel and transport","strong/weak do","Hablar de cómo viajas."),
+(5,"C"):("frequency adverbs","food and drink","word stress","Hablar de hábitos alimenticios."),
+(5,"D"):("order food and drink","restaurant language","polite intonation","Pedir comida y bebida."),
+(6,"A"):("present simple: he/she/it","time expressions","verb endings","Hablar de hábitos de otra persona."),
+(6,"B"):("present simple questions: he/she/it","jobs around the house","does","Preguntar sobre tareas frecuentes."),
+(6,"C"):("can / can't for ability","skills","can/can't","Hablar de habilidades."),
+(6,"D"):("make requests","requests","polite intonation","Hacer peticiones."),
+(7,"A"):("wh- questions","places","question intonation","Preguntar y responder sobre lugares."),
+(7,"B"):("was/were; there was/were","months and dates","was/were","Hablar de días pasados."),
+(7,"C"):("was/were questions","adjectives","strong/weak forms","Preguntar sobre eventos pasados."),
+(7,"D"):("buy travel tickets","travel tickets","polite intonation","Comprar billetes de viaje."),
+(8,"A"):("past simple regular verbs","verb phrases","-ed endings","Hablar de cuando eras joven."),
+(8,"B"):("past simple irregular verbs","irregular verbs","didn't","Hablar de un mal día."),
+(8,"C"):("past simple questions","holiday activities","linking sounds","Hablar de vacaciones."),
+(8,"D"):("greet people","greetings","natural rhythm","Saludar personas."),
+(9,"A"):("object pronouns","prepositions of place","weak pronouns","Hablar de personas en una foto."),
+(9,"B"):("like/enjoy/love/hate + -ing","hobbies","-ing","Hablar de gustos."),
+(9,"C"):("why and because","learning a language","because","Hablar de hábitos de estudio."),
+(9,"D"):("make and respond to suggestions","suggestions","intonation","Hacer y responder sugerencias."),
+(10,"A"):("would like/love to","collocations","would","Hablar de sueños y deseos."),
+(10,"B"):("be going to","party vocabulary","going to","Hablar de planes."),
+(10,"C"):("be going to: questions","seasons and time expressions","linking","Preguntar sobre planes."),
+(10,"D"):("make and respond to invitations","invitations","polite intonation","Invitar y responder invitaciones."),
+}
+
+def lesson(level, unit, letter):
+    title = CURRICULUM[level][unit-1]["ABCD".index(letter)]
+    if level == "A1" and (unit,letter) in A1:
+        grammar,vocab,pron,goal = A1[(unit,letter)]
+    else:
+        grammar="Language focus for this lesson"
+        vocab="Practical vocabulary"
+        pron="Natural pronunciation"
+        goal=f"Comunicarte con claridad sobre {title.lower()}."
+    return {"title":title,"grammar":grammar,"vocab":vocab,"pron":pron,"goal":goal}
