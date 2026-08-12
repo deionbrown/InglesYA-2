@@ -27,3 +27,7 @@ streamlit run app.py
 
 ## Importante sobre progreso y usuarios
 Esta primera conversión conserva el progreso durante la sesión del navegador. Para alumnos reales y progreso permanente por usuario conviene conectar el login existente de Inglés ¡YA! a Supabase y guardar allí el avance. Eso evita que dos alumnos compartan el mismo progreso.
+
+
+## Complete curriculum build
+This build includes lesson-specific CEFR-scaled vocabulary, pronunciation, grammar guidance, dialogue, reading, exercises, speaking prompts, evaluation and homework for all 320 lessons.

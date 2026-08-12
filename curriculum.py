@@ -158,9 +158,7 @@ def lesson(level, unit, letter):
     title = CURRICULUM[level][unit-1]["ABCD".index(letter)]
     if level == "A1" and (unit,letter) in A1:
         grammar,vocab,pron,goal = A1[(unit,letter)]
-    else:
-        grammar="Language focus for this lesson"
-        vocab="Practical vocabulary"
-        pron="Natural pronunciation"
-        goal=f"Comunicarte con claridad sobre {title.lower()}."
-    return {"title":title,"grammar":grammar,"vocab":vocab,"pron":pron,"goal":goal}
+        return {"title":title,"grammar":grammar,"vocab":vocab,"pron":pron,"goal":goal}
+    from content_engine import lesson_meta
+    meta = lesson_meta(level, unit, letter, title)
+    return {"title":title, **meta}

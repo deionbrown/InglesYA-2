@@ -1124,3 +1124,27 @@ def lesson_pack(title, level, goal, grammar=None):
     }
     pack["evaluation"] = evaluation_for(title, level, goal, grammar or "")
     return pack
+
+
+# ============================================================
+# COMPLETE 320-LESSON ENGINE (final override)
+# ============================================================
+def lesson_pack(title, level, goal, grammar=None, unit=None, letter=None):
+    from content_engine import build_pack
+    # app passes current identity through session state; fallback remains deterministic
+    try:
+        import streamlit as st
+        unit = unit or int(st.session_state.get("unit",1))
+        letter = letter or st.session_state.get("letter","A")
+    except Exception:
+        unit = unit or 1; letter = letter or "A"
+    return build_pack(level, unit, letter, title)
+
+def workbook_tasks_for(title, level, goal, grammar):
+    from content_engine import build_pack
+    try:
+        import streamlit as st
+        unit=int(st.session_state.get("unit",1)); letter=st.session_state.get("letter","A")
+    except Exception:
+        unit=1; letter="A"
+    return build_pack(level,unit,letter,title)["homework"]
