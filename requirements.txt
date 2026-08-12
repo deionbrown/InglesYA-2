@@ -1,3 +1,1 @@
-streamlit>=1.49
-edge-tts>=7.2.8
-SpeechRecognition>=3.10
+streamlit>=1.32

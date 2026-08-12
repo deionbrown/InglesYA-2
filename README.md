@@ -1,33 +1,31 @@
-# Inglés ¡YA! — versión WEB
 
-Conversión de la aplicación de escritorio Tkinter a Streamlit.
+# Inglés ¡YA! — A1 Prototype
 
-## Incluye
-- Niveles A1 a C1-C2.
-- 10 unidades por nivel, lecciones A/B/C/D.
-- Vocabulario, pronunciación, gramática, diálogo, lectura, ejercicios, práctica oral, evaluación y tareas.
-- Audio neural inglés estadounidense con Edge TTS.
-- Grabación desde el navegador con `st.audio_input` y reconocimiento de voz.
-- Corrector de respuestas.
-- Navegación anterior/siguiente.
-- Interfaz responsive para PC, tablet y celular.
+Functional prototype for Unit 1: Meet People.
 
-## Probar en tu PC
-```bash
-pip install -r requirements.txt
-streamlit run app.py
-```
+## Run on Windows / macOS / Linux
 
-## Publicar en Streamlit Community Cloud
-1. Crea un repositorio de GitHub.
-2. Sube todos los archivos de esta carpeta conservando `.streamlit/` y `assets/`.
-3. En Streamlit Community Cloud selecciona el repositorio.
-4. Main file: `app.py`.
-5. Deploy.
+1. Install Python 3.10+
+2. Open a terminal in this folder.
+3. Run:
 
-## Importante sobre progreso y usuarios
-Esta primera conversión conserva el progreso durante la sesión del navegador. Para alumnos reales y progreso permanente por usuario conviene conectar el login existente de Inglés ¡YA! a Supabase y guardar allí el avance. Eso evita que dos alumnos compartan el mismo progreso.
+   pip install -r requirements.txt
+   streamlit run app.py
 
+The browser will open the course automatically.
 
-## Complete curriculum build
-This build includes lesson-specific CEFR-scaled vocabulary, pronunciation, grammar guidance, dialogue, reading, exercises, speaking prompts, evaluation and homework for all 320 lessons.
+## Included
+- Unit dashboard
+- 10-section learning path
+- Vocabulary + IPA
+- Grammar
+- Listening prototype
+- Pronunciation
+- Speaking scaffold
+- Reading
+- Real English
+- Writing
+- Review
+- Persistent local progress + XP
+
+All lesson text is original prototype content for Inglés ¡YA!.

@@ -1,385 +1,190 @@
-import asyncio
-import hashlib
-import io
-import json
-import re
-import unicodedata
-from pathlib import Path
-from difflib import SequenceMatcher
 
 import streamlit as st
-import edge_tts
-import speech_recognition as sr
+import json, os
 
-from curriculum import LEVELS, LEVEL_LABELS, CURRICULUM, lesson
-from lesson_content import lesson_pack, workbook_tasks_for
-from grammar_helpers import TO_BE, DEMONSTRATIVES, TENSES, kind
-from speaking_utils import score_transcript
+st.set_page_config(page_title="Inglés ¡YA! — A1", page_icon="🌎", layout="wide")
 
-ROOT = Path(__file__).resolve().parent
-ASSETS = ROOT / "assets"
-AUDIO_CACHE = ROOT / "audio_cache"
-AUDIO_CACHE.mkdir(exist_ok=True)
-VOICE = "en-US-BrianNeural"
+PROGRESS_FILE = "progress.json"
 
-st.set_page_config(page_title="Inglés ¡YA!", page_icon="🇬🇧", layout="wide")
+def load_progress():
+    if os.path.exists(PROGRESS_FILE):
+        try:
+            return json.load(open(PROGRESS_FILE, "r", encoding="utf-8"))
+        except:
+            pass
+    return {"completed": [], "xp": 0}
+
+def save_progress(p):
+    json.dump(p, open(PROGRESS_FILE, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+
+p = load_progress()
 
 st.markdown("""
 <style>
-:root { --navy:#0E3769; --navy2:#174D82; --gold:#FFB719; --sky:#EAF5FB; --cream:#FFF8E9; --text:#0E315F; --muted:#66829A; }
-
-/* Force a light, readable main canvas regardless of the viewer theme. */
-[data-testid="stAppViewContainer"],
-[data-testid="stMain"],
-[data-testid="stMainBlockContainer"] { background: #f7fbfe; color: var(--text); }
-
-/* Main-content typography */
-[data-testid="stMain"] p,
-[data-testid="stMain"] label,
-[data-testid="stMain"] h1,
-[data-testid="stMain"] h2,
-[data-testid="stMain"] h3,
-[data-testid="stMain"] h4,
-[data-testid="stMain"] h5,
-[data-testid="stMain"] h6,
-[data-testid="stMain"] li,
-[data-testid="stMain"] span { color: var(--text); }
-
-/* Captions and helper text */
-[data-testid="stMain"] [data-testid="stCaptionContainer"],
-[data-testid="stMain"] [data-testid="stCaptionContainer"] p { color: var(--muted) !important; }
-
-/* Sidebar remains dark */
-[data-testid="stSidebar"] { background: linear-gradient(180deg,#0E3769,#123f72); }
-[data-testid="stSidebar"] * { color: white; }
-[data-testid="stSidebar"] input,
-[data-testid="stSidebar"] [data-baseweb="select"] * { color: white !important; }
-
-.brand {font-size:2rem;font-weight:900;line-height:1.0;color:white;margin:0 0 .2rem}
-.brand span {color:#FFB719;font-size:2.25rem}
-.hero {background:white;border:1px solid #dbe9f2;border-radius:20px;padding:22px 24px;margin-bottom:14px;box-shadow:0 8px 28px rgba(14,55,105,.06)}
-.lesson-title {font-size:2rem;font-weight:850;color:#0E315F !important;margin:0 0 5px}
-.goal, .goal * {color:#375f82 !important;font-size:1rem}
-.card {background:white;border:1px solid #dbe9f2;border-radius:16px;padding:16px 18px;margin:8px 0 12px;box-shadow:0 5px 18px rgba(14,55,105,.04)}
-.en {font-size:1.05rem;font-weight:750;color:#0E315F !important}
-.es {font-size:.92rem;color:#66829A !important;margin-top:2px}
-.badge {display:inline-block;background:#FFF0C3;color:#0E315F !important;border-radius:999px;padding:5px 10px;font-weight:700;font-size:.85rem;margin-right:6px}
-.section-note {color:#66829A !important;margin-top:-8px;margin-bottom:12px}
-.progress-box {background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);padding:14px;border-radius:14px;margin-top:16px}
-
-/* Tabs: show both emoji and text clearly. */
-div[data-testid="stTabs"] [role="tablist"] { gap: .25rem; }
-div[data-testid="stTabs"] button[role="tab"] {
-    font-weight:750;
-    color:#496982 !important;
-    background:transparent !important;
-    padding-left:.65rem;
-    padding-right:.65rem;
-}
-div[data-testid="stTabs"] button[role="tab"] * { color:#496982 !important; }
-div[data-testid="stTabs"] button[role="tab"][aria-selected="true"],
-div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] * { color:#FF4B4B !important; }
-
-/* Form controls in the main area */
-[data-testid="stMain"] input,
-[data-testid="stMain"] textarea {
-    color:#0E315F !important;
-    background:white !important;
-}
-[data-testid="stMain"] .stButton > button {
-    border-radius:10px;
-    font-weight:750;
-}
+.block-container {max-width:1100px;padding-top:2rem}
+.hero {padding:28px;border-radius:22px;background:linear-gradient(135deg,#0b3558,#146c94);color:white;margin-bottom:20px}
+.card {border:1px solid #dfe6ec;border-radius:18px;padding:20px;margin:10px 0}
+.small {opacity:.75}
+div.stButton > button {border-radius:12px;min-height:46px;font-weight:700}
 </style>
 """, unsafe_allow_html=True)
 
+sections = [
+("Explore","🌎"),("Vocabulary","🔤"),("Grammar","🧩"),("Listening","🎧"),
+("Pronunciation","🔊"),("Speaking","🗣️"),("Reading","📖"),
+("Real English","💬"),("Writing","✍️"),("Review","🧠")
+]
 
-def init_state():
-    st.session_state.setdefault("level", "A1")
-    st.session_state.setdefault("unit", 1)
-    st.session_state.setdefault("letter", "A")
-    st.session_state.setdefault("progress", {})
+if "page" not in st.session_state:
+    st.session_state.page = "Home"
 
+def complete(name, xp=10):
+    if name not in p["completed"]:
+        p["completed"].append(name)
+        p["xp"] += xp
+        save_progress(p)
+        st.success(f"Completed! +{xp} XP")
 
-def lesson_key(level, unit, letter):
-    return f"{level}-{unit}{letter}"
+def nav():
+    cols = st.columns(5)
+    for i,(name,icon) in enumerate(sections):
+        with cols[i%5]:
+            if st.button(f"{icon} {name}", use_container_width=True):
+                st.session_state.page=name
+                st.rerun()
 
+if st.session_state.page == "Home":
+    done=len(p["completed"])
+    percent=int(done/len(sections)*100)
+    st.markdown(f"""
+    <div class="hero">
+    <h1>INGLÉS ¡YA! — A1</h1>
+    <h2>Unit 1 · Meet People</h2>
+    <p>Learn to introduce yourself, ask basic questions and meet people in English.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    c1,c2,c3=st.columns(3)
+    c1.metric("Unit progress",f"{percent}%")
+    c2.metric("XP",p["xp"])
+    c3.metric("Lessons completed",f"{done}/10")
+    st.progress(percent/100)
+    st.subheader("Your learning path")
+    nav()
 
-def normalize_answer(text):
-    text = str(text).strip().lower()
-    text = unicodedata.normalize("NFD", text)
-    text = "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
-    text = text.replace("’", "'").replace("‘", "'").replace("´", "'")
-    text = re.sub(r"[^a-z0-9\s']", " ", text)
-    return re.sub(r"\s+", " ", text).strip()
+else:
+    if st.button("← Unit 1"):
+        st.session_state.page="Home"; st.rerun()
+    page=st.session_state.page
+    st.title(dict((n,f"{i} {n}") for n,i in sections)[page])
+    st.caption("Unit 1 · Meet People")
 
+    if page=="Explore":
+        st.subheader("People around the world")
+        st.write("Imagine you arrive at an international event. You meet three new people. What information do people usually share when they meet?")
+        st.multiselect("Choose:",["Name","Country","City","Job / studies","Bank password","Favorite color"])
+        st.info("Goal: By the end of this unit, you can introduce yourself and ask another person basic questions.")
+        if st.button("Complete Explore",use_container_width=True): complete(page)
 
-def answer_alternatives(expected):
-    raw = str(expected).strip()
-    if not raw:
-        return []
-    if "respuesta abierta" in raw.lower():
-        return ["__OPEN__"]
-    parts = re.split(r"\s*(?:/|;|\bor\b|\bo\b|\|)\s*", raw, flags=re.I)
-    ans = []
-    for p in parts:
-        p = p.strip(" .,:;()[]{}")
-        if not p:
-            continue
-        for candidate in [p, re.sub(r"\s*\([^)]*\)\s*", "", p).strip()]:
-            n = normalize_answer(candidate)
-            if n and n not in ans:
-                ans.append(n)
-    return ans
+    elif page=="Vocabulary":
+        words=[
+            ("name","/neɪm/","nombre"),("country","/ˈkʌntri/","país"),
+            ("city","/ˈsɪti/","ciudad"),("student","/ˈstuːdənt/","estudiante"),
+            ("teacher","/ˈtiːtʃər/","profesor/a"),("job","/dʒɑːb/","trabajo"),
+            ("friend","/frend/","amigo/a"),("from","/frʌm/","de / desde")
+        ]
+        for w,ipa,es in words:
+            st.markdown(f"### {w}  \n**{ipa}** · {es}")
+        ans=st.radio("Which word means 'ciudad'?",["country","city","job"],index=None)
+        if ans:
+            st.success("Correct!" if ans=="city" else "Try again.")
+        if st.button("Complete Vocabulary",use_container_width=True): complete(page)
 
+    elif page=="Grammar":
+        st.subheader("Verb BE")
+        st.markdown("""
+**I am** a student. → **I'm** a student.  
+**You are** from Peru. → **You're** from Peru.  
+**He is** a teacher. → **He's** a teacher.  
+**She is** from Mexico. → **She's** from Mexico.
 
-def grade_answer(user, expected):
-    alts = answer_alternatives(expected)
-    if "__OPEN__" in alts:
-        return "open", "Respuesta abierta: compárala con la guía y revisa que comunique la idea con claridad."
-    u = normalize_answer(user)
-    if not u:
-        return "empty", "Escribe una respuesta antes de corregir."
-    if any(u == a for a in alts):
-        return "ok", "✅ Correcto."
-    best = max((SequenceMatcher(None, u, a).ratio() for a in alts), default=0)
-    if best >= .82:
-        return "near", f"🟡 Muy cerca. Guía: {expected}"
-    return "bad", f"❌ Revisa tu respuesta. Forma esperada: {expected}"
+**Questions**  
+What's your name?  
+Where are you from?  
+Are you a student?
+""")
+        a=st.selectbox("I ___ from Peru.",["Choose","am","is","are"])
+        if a!="Choose": st.success("Correct!" if a=="am" else "Not yet — use 'am' with I.")
+        if st.button("Complete Grammar",use_container_width=True): complete(page)
 
+    elif page=="Listening":
+        st.subheader("Listen for key information")
+        st.info("Prototype transcript mode. Natural audio can be connected in the production version.")
+        with st.expander("Play / reveal dialogue"):
+            st.write("A: Hi! I'm Maya. What's your name?\n\nB: I'm Leo. Nice to meet you.\n\nA: Nice to meet you too. Where are you from?\n\nB: I'm from Peru, but I live in Madrid.")
+        q=st.radio("Where is Leo from?",["Spain","Peru","Mexico"],index=None)
+        if q: st.success("Correct!" if q=="Peru" else "Listen again.")
+        if st.button("Complete Listening",use_container_width=True): complete(page)
 
-def audio_path(text, slow=False):
-    key = hashlib.md5((VOICE + str(slow) + text).encode("utf-8")).hexdigest()
-    return AUDIO_CACHE / f"{key}.mp3"
+    elif page=="Pronunciation":
+        st.subheader("Contractions")
+        st.markdown("**I am → I'm**  \n**You are → You're**  \n**What is → What's**  \n**She is → She's**")
+        st.write("Say aloud: **Hi, I'm Alex. I'm from Lima. What's your name?**")
+        if st.button("I practiced it",use_container_width=True): complete(page)
 
+    elif page=="Speaking":
+        st.subheader("Introduce yourself")
+        name=st.text_input("Your name")
+        country=st.text_input("Your country")
+        city=st.text_input("Your city")
+        role=st.text_input("Job / studies")
+        if st.button("Build my introduction",use_container_width=True):
+            st.success(f"Hi! I'm {name or '...'}. I'm from {country or '...'}. I live in {city or '...'}. I'm {role or '...'}. Nice to meet you!")
+        if st.button("Complete Speaking",use_container_width=True): complete(page)
 
-async def _make_audio(text, slow, path):
-    rate = "-18%" if slow else "+0%"
-    await edge_tts.Communicate(text=text, voice=VOICE, rate=rate).save(str(path))
+    elif page=="Reading":
+        st.subheader("Three cities, three new friends")
+        st.markdown("""
+**Sofia** is 19. She's from Colombia and lives in Bogotá. She's a university student.  
+**Kenji** is from Japan. He lives in Osaka and works in a hotel.  
+**Emma** is 27. She's Canadian, but she lives in Lima. She's an English teacher.
+""")
+        q=st.radio("Who lives in Peru?",["Sofia","Kenji","Emma"],index=None)
+        if q: st.success("Correct!" if q=="Emma" else "Read the profiles again.")
+        if st.button("Complete Reading",use_container_width=True): complete(page)
 
+    elif page=="Real English":
+        st.subheader("Sound more natural")
+        st.markdown("""
+**Nice to meet you.** — Mucho gusto.  
+**How about you?** — ¿Y tú?  
+**Really?** — ¿En serio?  
+**That's great!** — ¡Qué bien!  
+**Me too.** — Yo también.
+""")
+        if st.button("Complete Real English",use_container_width=True): complete(page)
 
-def ensure_audio(text, slow=False):
-    path = audio_path(text, slow)
-    if path.exists() and path.stat().st_size > 0:
-        return path
-    try:
-        asyncio.run(_make_audio(text, slow, path))
-        return path if path.exists() else None
-    except Exception:
-        try:
-            if path.exists(): path.unlink()
-        except Exception:
-            pass
-        return None
+    elif page=="Writing":
+        st.subheader("Write your profile")
+        text=st.text_area("Write 4–5 sentences about yourself.",height=150,
+                          placeholder="Hi! I'm ... I'm from ... I live in ...")
+        if text and len(text.split())>=10:
+            st.success("Good start! Your profile has enough information for this A1 task.")
+        if st.button("Complete Writing",use_container_width=True): complete(page)
 
+    elif page=="Review":
+        st.subheader("Unit 1 Check")
+        score=0
+        q1=st.radio("1. I ___ a student.",["is","am","are"],index=None)
+        q2=st.radio("2. She ___ from Brazil.",["am","are","is"],index=None)
+        q3=st.radio("3. Best question for someone's country:",["How old are you?","Where are you from?","What's your job?"],index=None)
+        if st.button("Check my score",use_container_width=True):
+            score=(q1=="am")+(q2=="is")+(q3=="Where are you from?")
+            st.metric("Score",f"{score}/3")
+            if score==3:
+                st.success("Excellent — Unit 1 review passed.")
+                complete(page,20)
+            else:
+                st.warning("Review the unit and try again.")
 
-def audio_player(text, slow=False, key=None):
-    label = "🐢 Audio lento" if slow else "🔊 Audio normal"
-    with st.expander(label, expanded=False):
-        path = ensure_audio(text, slow)
-        if path:
-            st.audio(str(path), format="audio/mp3")
-        else:
-            st.warning("El audio no pudo generarse en este momento. Comprueba la conexión del servidor.")
-
-
-def bilingual_card(en, es, audio=True, slow=False, key=""):
-    st.markdown(f'<div class="card"><div class="en">{en}</div><div class="es">{es}</div></div>', unsafe_allow_html=True)
-    if audio:
-        audio_player(en, slow, key)
-
-
-def render_sidebar():
-    with st.sidebar:
-        st.markdown('<div class="brand">Inglés<br><span>¡YA!</span></div>', unsafe_allow_html=True)
-        level = st.selectbox("NIVEL", LEVELS, index=LEVELS.index(st.session_state.level))
-        if level != st.session_state.level:
-            st.session_state.level, st.session_state.unit, st.session_state.letter = level, 1, "A"
-            st.rerun()
-        unit = st.selectbox("UNIDAD", list(range(1, 11)), index=st.session_state.unit - 1)
-        letter = st.radio("LECCIÓN", ["A", "B", "C", "D"], index="ABCD".index(st.session_state.letter), horizontal=True)
-        st.session_state.unit, st.session_state.letter = unit, letter
-        d = lesson(level, unit, letter)
-        st.caption(f"{unit}{letter} · {d['title']}")
-        done = sum(1 for v in st.session_state.progress.values() if v)
-        total = len(LEVELS) * 40
-        pct = round(done / total * 100) if total else 0
-        st.markdown('<div class="progress-box">', unsafe_allow_html=True)
-        st.markdown("**PROGRESO GENERAL**")
-        st.progress(pct / 100)
-        st.caption(f"{done} / {total} lecciones · {pct}%")
-        st.markdown('</div>', unsafe_allow_html=True)
-
-
-def lesson_navigation(level, unit, letter):
-    idx = (unit - 1) * 4 + "ABCD".index(letter)
-    c1, c2 = st.columns([1,1])
-    with c1:
-        if st.button("‹ Lección anterior", disabled=idx == 0, use_container_width=True):
-            idx2 = idx - 1
-            st.session_state.unit, st.session_state.letter = idx2 // 4 + 1, "ABCD"[idx2 % 4]
-            st.rerun()
-    with c2:
-        if st.button("Lección siguiente ›", disabled=idx == 39, use_container_width=True, type="primary"):
-            idx2 = idx + 1
-            st.session_state.unit, st.session_state.letter = idx2 // 4 + 1, "ABCD"[idx2 % 4]
-            st.rerun()
-
-
-def render_vocabulary(pack):
-    st.subheader("📚 Vocabulario")
-    st.caption("Palabras y expresiones útiles de la lección.")
-    for i, (en, es) in enumerate(pack["vocabulary"]):
-        c1, c2 = st.columns([5,2])
-        with c1:
-            st.markdown(f'<div class="card"><div class="en">{en}</div><div class="es">{es}</div></div>', unsafe_allow_html=True)
-        with c2:
-            audio_player(en, False, f"v{i}")
-
-
-def render_pronunciation(pack):
-    st.subheader("🔊 Pronunciación")
-    st.caption("Escucha cada frase primero lento y después a velocidad normal.")
-    for i, (en, es) in enumerate(pack["examples"]):
-        st.markdown(f'<div class="card"><div class="en">{en}</div><div class="es">{es}</div></div>', unsafe_allow_html=True)
-        a,b = st.columns(2)
-        with a: audio_player(en, True, f"ps{i}")
-        with b: audio_player(en, False, f"pn{i}")
-
-
-def render_grammar(d, pack):
-    st.subheader("📖 Gramática")
-    st.markdown(f'<span class="badge">Enfoque: {d["grammar"]}</span><span class="badge">Pronunciación: {d["pron"]}</span>', unsafe_allow_html=True)
-    st.write("")
-    st.info(f"En esta lección practicarás **{pack.get('grammar', d['grammar'])}** para poder: {pack.get('goal', d['goal'])}")
-    if pack.get("grammar_note"):
-        st.markdown("**Cómo funciona**")
-        st.write(pack["grammar_note"])
-    st.markdown("**Modelos en contexto**")
-    for en, es in pack["examples"]:
-        bilingual_card(en, es, audio=False)
-
-
-def render_dialogue(pack):
-    st.subheader("💬 Diálogo")
-    st.caption("Conversación completa. Inglés arriba y traducción debajo.")
-    full = " ".join(en for speaker,en,es in pack["dialogue"])
-    audio_player(full, True, "dialogue_full")
-    for i,(speaker,en,es) in enumerate(pack["dialogue"]):
-        st.markdown(f'<div class="card"><div class="en"><b>{speaker}:</b> {en}</div><div class="es">{es}</div></div>', unsafe_allow_html=True)
-        audio_player(en, True, f"dlg{i}")
-
-
-def render_reading(pack):
-    st.subheader("📘 Lectura")
-    st.caption("Lee el texto completo y utiliza la traducción como apoyo.")
-    text = " ".join(en for en,es in pack["reading"])
-    audio_player(text, True, "reading_full")
-    for en,es in pack["reading"]:
-        bilingual_card(en, es, audio=False)
-
-
-def render_exercises(d, pack):
-    st.subheader("✏️ Ejercicios")
-    st.caption("Producción, vocabulario, expresión oral y edición.")
-    for i,item in enumerate(pack.get("exercises",[]),1):
-        key=f"ex_{i}_{st.session_state.level}_{st.session_state.unit}_{st.session_state.letter}"
-        st.markdown(f"**{i}. {item['prompt']}**")
-        st.text_area("Tu respuesta", key=key, label_visibility="collapsed")
-        with st.expander("📖 Ver guía"):
-            st.write(item.get("guide","Respuesta abierta."))
-
-def render_speaking(pack):
-    st.subheader("🎤 Práctica oral")
-    st.caption("Escucha la frase, repítela y grábate. La web intentará reconocer tu inglés y compararlo con la frase objetivo.")
-    for i,(en,es) in enumerate(pack["examples"]):
-        st.markdown(f'<div class="card"><div class="en">{en}</div><div class="es">{es}</div></div>', unsafe_allow_html=True)
-        a,b=st.columns(2)
-        with a: audio_player(en, True, f"sp_s{i}")
-        with b: audio_player(en, False, f"sp_n{i}")
-        clip = st.audio_input("🎤 Graba tu respuesta", key=f"mic_{i}_{st.session_state.level}_{st.session_state.unit}_{st.session_state.letter}")
-        if clip:
-            try:
-                recognizer = sr.Recognizer()
-                with sr.AudioFile(io.BytesIO(clip.getvalue())) as source:
-                    audio = recognizer.record(source)
-                heard = recognizer.recognize_google(audio, language="en-US")
-                score, missing = score_transcript(en, heard)
-                if score >= 90: st.success(f"{score}% · Excelente. Entendido: {heard}")
-                elif score >= 75: st.warning(f"{score}% · Bien. Entendido: {heard}")
-                else: st.error(f"{score}% · Inténtalo otra vez. Entendido: {heard}")
-                if missing: st.caption("Practica: " + ", ".join(missing[:6]))
-            except Exception as ex:
-                st.warning(f"No se pudo reconocer esta grabación. Puedes volver a intentarlo. ({type(ex).__name__})")
-
-
-def render_evaluation(pack):
-    st.subheader("🧠 Evaluación")
-    st.caption("Responde primero y utiliza el corrector después.")
-    for i,(q,expected) in enumerate(pack["evaluation"],1):
-        keybase=f"eval_{st.session_state.level}_{st.session_state.unit}_{st.session_state.letter}_{i}"
-        ans=st.text_input(f"{i}. {q}", key=keybase)
-        c1,c2=st.columns([1,1])
-        with c1:
-            if st.button("✅ Corregir", key=keybase+"_check", use_container_width=True):
-                status,msg=grade_answer(ans, expected)
-                st.session_state[keybase+"_msg"]=(status,msg)
-        with c2:
-            with st.popover("📖 Ver guía", use_container_width=True): st.write(expected)
-        if keybase+"_msg" in st.session_state:
-            status,msg=st.session_state[keybase+"_msg"]
-            {"ok":st.success,"near":st.warning,"bad":st.error,"empty":st.info,"open":st.info}.get(status,st.info)(msg)
-
-
-def render_tasks(d, pack):
-    st.subheader("📒 Tareas")
-    tasks = pack.get("homework", [])
-    for ti,task in enumerate(tasks):
-        with st.expander(task.get("title",f"Tarea {ti+1}"), expanded=ti==0):
-            st.write(task.get("instruction",""))
-            for j,item in enumerate(task.get("items",[])):
-                prompt, expected = item[0], item[1]
-                key=f"task_{st.session_state.level}_{st.session_state.unit}_{st.session_state.letter}_{ti}_{j}"
-                st.text_area(prompt, key=key)
-                with st.expander("Ver guía"):
-                    st.write(expected)
-
-
-init_state()
-render_sidebar()
-level, unit, letter = st.session_state.level, st.session_state.unit, st.session_state.letter
-lesson_signature = f"{level}:{unit}:{letter}"
-if st.session_state.get("_lesson_signature") != lesson_signature:
-    # Drop transient answer/recording state from the previous lesson.
-    prefixes = ("ex_", "eval_", "task_", "mic_")
-    for _k in list(st.session_state.keys()):
-        if _k.startswith(prefixes):
-            del st.session_state[_k]
-    st.session_state["_lesson_signature"] = lesson_signature
-
-d = lesson(level, unit, letter)
-# IMPORTANT: pack is rebuilt from the CURRENT level/unit/letter every rerun.
-pack = lesson_pack(d["title"], level, d["goal"], d["grammar"])
-
-st.caption(f"{level} - {LEVEL_LABELS[level]}  ›  Unidad {unit}  ›  {unit}{letter} - {d['title']}")
-st.markdown(f'<div class="hero"><div class="lesson-title">{unit}{letter} - {d["title"]}</div><div class="goal">🎯 <b>Objetivo:</b> {d["goal"]}</div></div>', unsafe_allow_html=True)
-lesson_navigation(level,unit,letter)
-
-names=["📚 Vocabulario","🔊 Pronunciación","📖 Gramática","💬 Diálogo","📘 Lectura","✏️ Ejercicios","🎤 Práctica oral","🧠 Evaluación","📒 Tareas"]
-tabs=st.tabs(names)
-with tabs[0]: render_vocabulary(pack)
-with tabs[1]: render_pronunciation(pack)
-with tabs[2]: render_grammar(d,pack)
-with tabs[3]: render_dialogue(pack)
-with tabs[4]: render_reading(pack)
-with tabs[5]: render_exercises(d, pack)
-with tabs[6]: render_speaking(pack)
-with tabs[7]: render_evaluation(pack)
-with tabs[8]: render_tasks(d, pack)
-
-st.divider()
-key=lesson_key(level,unit,letter)
-completed=bool(st.session_state.progress.get(key))
-if st.checkbox("✅ Marcar esta lección como completada", value=completed, key=f"done_{key}") != completed:
-    st.session_state.progress[key]=not completed
-    st.rerun()
+    st.divider()
+    nav()
