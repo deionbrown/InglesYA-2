@@ -251,7 +251,11 @@ def render_grammar(d, pack):
     st.subheader("📖 Gramática")
     st.markdown(f'<span class="badge">Enfoque: {d["grammar"]}</span><span class="badge">Pronunciación: {d["pron"]}</span>', unsafe_allow_html=True)
     st.write("")
-    st.info(f"En esta lección practicarás **{d['grammar']}** para poder: {d['goal']}")
+    st.info(f"En esta lección practicarás **{pack.get('grammar', d['grammar'])}** para poder: {pack.get('goal', d['goal'])}")
+    if pack.get("grammar_note"):
+        st.markdown("**Cómo funciona**")
+        st.write(pack["grammar_note"])
+    st.markdown("**Modelos en contexto**")
     for en, es in pack["examples"]:
         bilingual_card(en, es, audio=False)
 
@@ -275,12 +279,15 @@ def render_reading(pack):
         bilingual_card(en, es, audio=False)
 
 
-def render_exercises(d):
+def render_exercises(d, pack):
     st.subheader("✏️ Ejercicios")
-    qs = [f"Escribe una oración usando: {d['grammar']}.", f"Usa vocabulario relacionado con: {d['vocab']}.", f"Responde al objetivo: {d['goal']}"]
-    for i,q in enumerate(qs,1):
-        st.text_area(f"{i}. {q}", key=f"ex_{i}_{st.session_state.level}_{st.session_state.unit}_{st.session_state.letter}")
-
+    st.caption("Producción, vocabulario, expresión oral y edición.")
+    for i,item in enumerate(pack.get("exercises",[]),1):
+        key=f"ex_{i}_{st.session_state.level}_{st.session_state.unit}_{st.session_state.letter}"
+        st.markdown(f"**{i}. {item['prompt']}**")
+        st.text_area("Tu respuesta", key=key, label_visibility="collapsed")
+        with st.expander("📖 Ver guía"):
+            st.write(item.get("guide","Respuesta abierta."))
 
 def render_speaking(pack):
     st.subheader("🎤 Práctica oral")
@@ -324,19 +331,16 @@ def render_evaluation(pack):
             {"ok":st.success,"near":st.warning,"bad":st.error,"empty":st.info,"open":st.info}.get(status,st.info)(msg)
 
 
-def render_tasks(d):
+def render_tasks(d, pack):
     st.subheader("📒 Tareas")
-    tasks = workbook_tasks_for(d["title"], st.session_state.level, d["goal"], d["grammar"])
+    tasks = pack.get("homework", [])
     for ti,task in enumerate(tasks):
         with st.expander(task.get("title",f"Tarea {ti+1}"), expanded=ti==0):
             st.write(task.get("instruction",""))
             for j,item in enumerate(task.get("items",[])):
                 prompt, expected = item[0], item[1]
                 key=f"task_{st.session_state.level}_{st.session_state.unit}_{st.session_state.letter}_{ti}_{j}"
-                ans=st.text_input(prompt, key=key)
-                if st.button("Corregir respuesta", key=key+"_b"):
-                    status,msg=grade_answer(ans, expected)
-                    {"ok":st.success,"near":st.warning,"bad":st.error,"empty":st.info,"open":st.info}.get(status,st.info)(msg)
+                st.text_area(prompt, key=key)
                 with st.expander("Ver guía"):
                     st.write(expected)
 
@@ -368,10 +372,10 @@ with tabs[1]: render_pronunciation(pack)
 with tabs[2]: render_grammar(d,pack)
 with tabs[3]: render_dialogue(pack)
 with tabs[4]: render_reading(pack)
-with tabs[5]: render_exercises(d)
+with tabs[5]: render_exercises(d, pack)
 with tabs[6]: render_speaking(pack)
 with tabs[7]: render_evaluation(pack)
-with tabs[8]: render_tasks(d)
+with tabs[8]: render_tasks(d, pack)
 
 st.divider()
 key=lesson_key(level,unit,letter)
