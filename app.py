@@ -344,7 +344,17 @@ def render_tasks(d):
 init_state()
 render_sidebar()
 level, unit, letter = st.session_state.level, st.session_state.unit, st.session_state.letter
+lesson_signature = f"{level}:{unit}:{letter}"
+if st.session_state.get("_lesson_signature") != lesson_signature:
+    # Drop transient answer/recording state from the previous lesson.
+    prefixes = ("ex_", "eval_", "task_", "mic_")
+    for _k in list(st.session_state.keys()):
+        if _k.startswith(prefixes):
+            del st.session_state[_k]
+    st.session_state["_lesson_signature"] = lesson_signature
+
 d = lesson(level, unit, letter)
+# IMPORTANT: pack is rebuilt from the CURRENT level/unit/letter every rerun.
 pack = lesson_pack(d["title"], level, d["goal"], d["grammar"])
 
 st.caption(f"{level} - {LEVEL_LABELS[level]}  ›  Unidad {unit}  ›  {unit}{letter} - {d['title']}")
