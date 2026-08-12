@@ -1027,3 +1027,100 @@ def vocabulary_for(title, level):
             if len(result) >= 15:
                 break
     return result
+
+# ============================================================
+# LEVEL-SAFE CONTENT ROUTING
+# Prevents content from a previous/A1 lesson from being reused
+# when the learner changes CEFR level.
+# ============================================================
+
+def _non_a1_examples(title, level, goal):
+    patterns = {
+        "A2": [
+            (f"I can talk about {title.lower()} in everyday situations.", f"Puedo hablar sobre {title.lower()} en situaciones cotidianas."),
+            (f"I can add simple details when I discuss {title.lower()}.", f"Puedo agregar detalles sencillos cuando hablo de {title.lower()}."),
+            ("I can ask follow-up questions and give short answers.", "Puedo hacer preguntas de seguimiento y dar respuestas breves."),
+        ],
+        "A2+": [
+            (f"I can explain my experience with {title.lower()} more clearly.", f"Puedo explicar con más claridad mi experiencia con {title.lower()}."),
+            ("I can connect ideas using reasons, results and contrasts.", "Puedo conectar ideas usando razones, resultados y contrastes."),
+            ("I can give a simple opinion and support it with an example.", "Puedo dar una opinión sencilla y sustentarla con un ejemplo."),
+        ],
+        "B1": [
+            (f"I can describe my experience and opinions about {title.lower()}.", f"Puedo describir mi experiencia y mis opiniones sobre {title.lower()}."),
+            ("I can explain the reasons behind my choices and decisions.", "Puedo explicar las razones detrás de mis elecciones y decisiones."),
+            ("I can compare different possibilities and say what I would prefer.", "Puedo comparar distintas posibilidades y decir qué preferiría."),
+        ],
+        "B1+": [
+            (f"I can discuss different aspects of {title.lower()} with more detail.", f"Puedo conversar sobre distintos aspectos de {title.lower()} con más detalle."),
+            ("I can support my point of view with reasons and examples.", "Puedo sustentar mi punto de vista con razones y ejemplos."),
+            ("I can respond to another person's opinion and keep the discussion moving.", "Puedo responder a la opinión de otra persona y mantener la conversación."),
+        ],
+        "B2": [
+            (f"I can discuss {title.lower()} from more than one perspective.", f"Puedo conversar sobre {title.lower()} desde más de una perspectiva."),
+            ("I can evaluate advantages, disadvantages and possible consequences.", "Puedo evaluar ventajas, desventajas y posibles consecuencias."),
+            ("I can defend a position while acknowledging alternative views.", "Puedo defender una postura reconociendo puntos de vista alternativos."),
+        ],
+        "B2+": [
+            (f"I can analyse the implications of {title.lower()} with precision.", f"Puedo analizar con precisión las implicaciones de {title.lower()}."),
+            ("I can qualify my claims and express degrees of certainty.", "Puedo matizar mis afirmaciones y expresar grados de certeza."),
+            ("I can challenge an argument constructively and justify my response.", "Puedo cuestionar un argumento de forma constructiva y justificar mi respuesta."),
+        ],
+        "C1-C2": [
+            (f"I can examine {title.lower()} critically and articulate a nuanced position.", f"Puedo examinar críticamente {title.lower()} y formular una postura matizada."),
+            ("I can distinguish assumptions, evidence and implications in a complex argument.", "Puedo distinguir supuestos, evidencias e implicaciones en un argumento complejo."),
+            ("I can adapt my language to academic, professional and informal discussion.", "Puedo adaptar mi lenguaje a conversaciones académicas, profesionales e informales."),
+        ],
+    }
+    return patterns.get(level, patterns["B1"])
+
+
+def _non_a1_dialogue(title, level, goal, examples):
+    return [
+        ("A", f"What do you think about {title.lower()}?", f"¿Qué opinas sobre {title.lower()}?"),
+        ("B", examples[0][0], examples[0][1]),
+        ("A", "What makes you say that?", "¿Qué te hace decir eso?"),
+        ("B", examples[1][0], examples[1][1]),
+        ("A", "Is there another way to look at it?", "¿Hay otra forma de verlo?"),
+        ("B", examples[2][0], examples[2][1]),
+        ("A", "Can you give me an example?", "¿Puedes darme un ejemplo?"),
+        ("B", f"Yes. My goal is to {goal[:1].lower() + goal[1:] if goal else 'communicate more clearly'}", f"Sí. Mi objetivo es: {goal}"),
+    ]
+
+
+def _non_a1_reading(title, level, goal, examples):
+    return [
+        (f"This lesson focuses on {title.lower()} at {level} level.", f"Esta lección se centra en {title.lower()} en el nivel {level}."),
+        (examples[0][0], examples[0][1]),
+        ("The topic can be understood from different points of view, so learners practise explaining not only what they think but also why.", "El tema puede entenderse desde distintos puntos de vista, por eso los estudiantes practican explicar no solo lo que piensan sino también por qué."),
+        (examples[1][0], examples[1][1]),
+        ("They also listen for useful expressions, compare ideas and respond to follow-up questions.", "También escuchan expresiones útiles, comparan ideas y responden preguntas de seguimiento."),
+        (f"By the end, the communicative goal is: {goal}", f"Al final, el objetivo comunicativo es: {goal}"),
+    ]
+
+
+def lesson_pack(title, level, goal, grammar=None):
+    """Build the pack from the CURRENT lesson identity on every rerun.
+
+    A1 keeps the detailed beginner material. From A2 upward, examples,
+    dialogue and reading are generated for the selected CEFR level and
+    lesson title so A1 'Hello' content can never leak into B1/B2/etc.
+    """
+    vocab = vocabulary_for(title, level)
+    if level == "A1":
+        examples = examples_for(title, level, goal)
+        reading = reading_for(title, level, goal)
+        dialogue = dialogue_for(title, level, goal)
+    else:
+        examples = _non_a1_examples(title, level, goal)
+        reading = _non_a1_reading(title, level, goal, examples)
+        dialogue = _non_a1_dialogue(title, level, goal, examples)
+
+    pack = {
+        "vocabulary": vocab,
+        "examples": examples,
+        "reading": reading,
+        "dialogue": dialogue,
+    }
+    pack["evaluation"] = evaluation_for(title, level, goal, grammar or "")
+    return pack
