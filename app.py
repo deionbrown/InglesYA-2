@@ -27,21 +27,69 @@ st.set_page_config(page_title="Inglés ¡YA!", page_icon="🇬🇧", layout="wid
 st.markdown("""
 <style>
 :root { --navy:#0E3769; --navy2:#174D82; --gold:#FFB719; --sky:#EAF5FB; --cream:#FFF8E9; --text:#0E315F; --muted:#66829A; }
-[data-testid="stAppViewContainer"] { background: #f7fbfe; }
+
+/* Force a light, readable main canvas regardless of the viewer theme. */
+[data-testid="stAppViewContainer"],
+[data-testid="stMain"],
+[data-testid="stMainBlockContainer"] { background: #f7fbfe; color: var(--text); }
+
+/* Main-content typography */
+[data-testid="stMain"] p,
+[data-testid="stMain"] label,
+[data-testid="stMain"] h1,
+[data-testid="stMain"] h2,
+[data-testid="stMain"] h3,
+[data-testid="stMain"] h4,
+[data-testid="stMain"] h5,
+[data-testid="stMain"] h6,
+[data-testid="stMain"] li,
+[data-testid="stMain"] span { color: var(--text); }
+
+/* Captions and helper text */
+[data-testid="stMain"] [data-testid="stCaptionContainer"],
+[data-testid="stMain"] [data-testid="stCaptionContainer"] p { color: var(--muted) !important; }
+
+/* Sidebar remains dark */
 [data-testid="stSidebar"] { background: linear-gradient(180deg,#0E3769,#123f72); }
 [data-testid="stSidebar"] * { color: white; }
+[data-testid="stSidebar"] input,
+[data-testid="stSidebar"] [data-baseweb="select"] * { color: white !important; }
+
 .brand {font-size:2rem;font-weight:900;line-height:1.0;color:white;margin:0 0 .2rem}
 .brand span {color:#FFB719;font-size:2.25rem}
 .hero {background:white;border:1px solid #dbe9f2;border-radius:20px;padding:22px 24px;margin-bottom:14px;box-shadow:0 8px 28px rgba(14,55,105,.06)}
-.lesson-title {font-size:2rem;font-weight:850;color:#0E315F;margin:0 0 5px}
-.goal {color:#375f82;font-size:1rem}
+.lesson-title {font-size:2rem;font-weight:850;color:#0E315F !important;margin:0 0 5px}
+.goal, .goal * {color:#375f82 !important;font-size:1rem}
 .card {background:white;border:1px solid #dbe9f2;border-radius:16px;padding:16px 18px;margin:8px 0 12px;box-shadow:0 5px 18px rgba(14,55,105,.04)}
-.en {font-size:1.05rem;font-weight:750;color:#0E315F}.es {font-size:.92rem;color:#66829A;margin-top:2px}
-.badge {display:inline-block;background:#FFF0C3;color:#0E315F;border-radius:999px;padding:5px 10px;font-weight:700;font-size:.85rem;margin-right:6px}
-.section-note {color:#66829A;margin-top:-8px;margin-bottom:12px}
+.en {font-size:1.05rem;font-weight:750;color:#0E315F !important}
+.es {font-size:.92rem;color:#66829A !important;margin-top:2px}
+.badge {display:inline-block;background:#FFF0C3;color:#0E315F !important;border-radius:999px;padding:5px 10px;font-weight:700;font-size:.85rem;margin-right:6px}
+.section-note {color:#66829A !important;margin-top:-8px;margin-bottom:12px}
 .progress-box {background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);padding:14px;border-radius:14px;margin-top:16px}
-div[data-testid="stTabs"] button {font-weight:700;}
-.stButton > button {border-radius:10px;font-weight:750;}
+
+/* Tabs: show both emoji and text clearly. */
+div[data-testid="stTabs"] [role="tablist"] { gap: .25rem; }
+div[data-testid="stTabs"] button[role="tab"] {
+    font-weight:750;
+    color:#496982 !important;
+    background:transparent !important;
+    padding-left:.65rem;
+    padding-right:.65rem;
+}
+div[data-testid="stTabs"] button[role="tab"] * { color:#496982 !important; }
+div[data-testid="stTabs"] button[role="tab"][aria-selected="true"],
+div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] * { color:#FF4B4B !important; }
+
+/* Form controls in the main area */
+[data-testid="stMain"] input,
+[data-testid="stMain"] textarea {
+    color:#0E315F !important;
+    background:white !important;
+}
+[data-testid="stMain"] .stButton > button {
+    border-radius:10px;
+    font-weight:750;
+}
 </style>
 """, unsafe_allow_html=True)
 
